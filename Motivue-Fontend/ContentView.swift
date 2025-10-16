@@ -1,8 +1,8 @@
 //
 //  ContentView.swift
-//  Motivue-Fontend
+//  Motivue
 //
-//  Created by JangeJason on 2025/10/16.
+//  Created by JangeJason on 2025/9/20.
 //
 
 import SwiftUI
