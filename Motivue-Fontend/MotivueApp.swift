@@ -11,7 +11,7 @@ import SwiftUI
 struct MotivueApp: App {
     var body: some Scene {
         WindowGroup {
-            HomePage()
+            ContentView()
         }
     }
 }
