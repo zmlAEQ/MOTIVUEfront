@@ -2270,24 +2270,26 @@ private struct DurationRuler: View {
                             .stroke(Color.white.opacity(0.05), lineWidth: 1)
                     )
                 GeometryReader { geo in
-                    let width = geo.size.width
-                    let position = CGFloat(value / 90.0) * width
-                    ZStack {
-                        HStack(spacing: 8) {
-                            ForEach(0..<13) { idx in
-                                VStack {
-                                    RoundedRectangle(cornerRadius: 1)
-                                        .fill(idx % 3 == 0 ? Color.white.opacity(0.8) : Color.gray.opacity(0.6))
-                                        .frame(width: 2, height: idx % 3 == 0 ? 24 : 14)
-                                    if idx % 3 == 0 {
-                                        Text("\(idx * 10)")
-                                            .font(.system(size: 9, weight: .semibold))
-                                            .foregroundColor(.gray)
-                                    }
+                    let maxMinutes: Double = 120
+                    let usableWidth = geo.size.width
+                    let spacing = usableWidth / 12.0
+                    let clampedValue = min(max(0, value), maxMinutes)
+                    let position = CGFloat(clampedValue / maxMinutes) * usableWidth
+                    ZStack(alignment: .topLeading) {
+                        ForEach(0...12, id: \.self) { idx in
+                            let x = CGFloat(idx) * spacing
+                            VStack(spacing: 4) {
+                                RoundedRectangle(cornerRadius: 1)
+                                    .fill(idx % 3 == 0 ? Color.white.opacity(0.8) : Color.gray.opacity(0.6))
+                                    .frame(width: 2, height: idx % 3 == 0 ? 24 : 14)
+                                if idx % 3 == 0 {
+                                    Text("\(idx * 10)")
+                                        .font(.system(size: 9, weight: .semibold))
+                                        .foregroundColor(.gray)
                                 }
                             }
+                            .position(x: x, y: 22)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
                         Rectangle()
                             .fill(Color.orange)
                             .frame(width: 2, height: 34)
@@ -2300,9 +2302,11 @@ private struct DurationRuler: View {
                 .gesture(
                     DragGesture()
                         .onChanged { g in
-                            let total = max(1, UIScreen.main.bounds.width - 80)
-                            let newVal = max(0, min(1, g.location.x / total))
-                            value = Double(newVal) * 90
+                            let maxMinutes: Double = 120
+                            let clampedX = max(0, min(g.location.x, g.startLocation.x == 0 ? g.location.x : g.location.x))
+                            let geoWidth = max(1, geo.size.width)
+                            let newVal = max(0, min(maxMinutes, Double(clampedX / geoWidth) * maxMinutes))
+                            value = newVal
                         }
                 )
             }
