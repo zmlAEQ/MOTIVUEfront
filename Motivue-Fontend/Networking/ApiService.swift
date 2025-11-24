@@ -37,12 +37,12 @@ final class ApiService {
         return try await request(path: "/readiness/from-healthkit", method: "GET")
     }
 
-    func postConsumption(payload: Data) async throws -> TrainingConsumptionResponse {
+    func postConsumption(payload: Data? = nil) async throws -> TrainingConsumptionResponse {
         if useMock { return MockData.consumption }
         return try await request(path: "/readiness/consumption", method: "POST", body: payload)
     }
 
-    func runWeeklyReport(payload: Data) async throws -> WeeklyReportResponse {
+    func runWeeklyReport(payload: Data? = nil) async throws -> WeeklyReportResponse {
         if useMock { return MockData.weeklyReport }
         return try await request(path: "/weekly-report/run", method: "POST", body: payload)
     }
@@ -52,7 +52,7 @@ final class ApiService {
         return try await request(path: "/baseline/\(userId)", method: "GET")
     }
 
-    func fetchPhysioAge(payload: Data) async throws -> PhysioAgeResponse {
+    func fetchPhysioAge(payload: Data? = nil) async throws -> PhysioAgeResponse {
         if useMock { return MockData.physioAge }
         return try await request(path: "/physio-age", method: "POST", body: payload)
     }
@@ -86,4 +86,3 @@ final class ApiService {
         }
     }
 }
-

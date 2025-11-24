@@ -9,7 +9,7 @@ import SwiftUI
 import UIKit
 
 struct ContentView: View {
-    @StateObject private var appData = AppData()
+    @EnvironmentObject private var appData: AppData
     @State private var selectedTab: Tab = .home
     @State private var showCalendarOverlay = false
 
