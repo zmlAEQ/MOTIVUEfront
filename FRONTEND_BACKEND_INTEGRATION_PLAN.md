@@ -49,6 +49,6 @@
 - 第 5 步：认证/缓存/错误提示等收尾。
 
 ## 现状与 gap
-- UI 已完成（Home/Training/Journal/Sleep/Report/Me），未接 API。
-- 模型/网络层已初步对齐；仍需用真实响应校验字段、补缺并绑定到 UI。
-- `DEV_BACKEND_UI_REFERENCE.md` 需补充页面-接口绑定；Git 本地提交未能推送（网络超时，origin=https://github.com/zmlAEQ/MOTIVUEfront），待网络恢复执行 `git push origin main`。
+- UI 已完成（Home/Training/Journal/Sleep/Report/Me），部分已绑定 mock（Home/Training/Me/Report）。
+- 模型/网络层已对齐主要字段；仍需用真实响应校验字段、补缺并绑定到 UI（尤其 Training/Sleep 真实数据）。
+- `DEV_BACKEND_UI_REFERENCE.md` 需补充页面-接口绑定；Git 已可推送（origin=https://github.com/zmlAEQ/MOTIVUEfront）。
