@@ -43,7 +43,7 @@ struct ContentView: View {
                                 JournalTabView()
                                     .padding(.bottom, 88)
                             case .sleep:
-                                SleepTabView()
+                                SleepTabView(readiness: appData.readiness)
                                     .padding(.bottom, 88)
                             case .me:
                                 MeTabView(
@@ -753,6 +753,34 @@ private struct ReportFooterNote: View {
 // MARK: - Sleep Tab
 
 private struct SleepTabView: View {
+    var readiness: ReadinessResponse
+
+    private var sleepScore: Int {
+        // Placeholder derived score; could replace with backend sleep score if provided
+        if let eff = readiness.metrics?.sleepEfficiency {
+            return Int((eff * 100).rounded())
+        }
+        return 78
+    }
+    private var timeAsleep: String {
+        if let h = readiness.sleepDurationHours {
+            return String(format: "%.1f h", h)
+        }
+        return "6h 42m"
+    }
+    private var restorative: String {
+        if let r = readiness.metrics?.restorativeRatio {
+            return String(format: "%.0f%%", r * 100)
+        }
+        return "42%"
+    }
+    private var sleepEfficiency: String {
+        if let eff = readiness.metrics?.sleepEfficiency {
+            return String(format: "%.0f%%", eff * 100)
+        }
+        return "86%"
+    }
+
     var body: some View {
         ZStack {
             LinearGradient(
@@ -771,13 +799,16 @@ private struct SleepTabView: View {
                     SleepHeaderView()
                         .padding(.horizontal, 24)
 
-                    SleepScoreHero()
+                    SleepScoreHero(score: sleepScore, timeAsleep: timeAsleep)
                         .padding(.horizontal, 20)
 
                     SleepHypnogramCard()
                         .padding(.horizontal, 20)
 
-                    SleepMetricsGrid()
+                    SleepMetricsGrid(
+                        efficiencyText: sleepEfficiency,
+                        restorativeText: restorative
+                    )
                         .padding(.horizontal, 16)
 
                     SleepInsightCard()
@@ -822,11 +853,13 @@ private struct SleepHeaderView: View {
 }
 
 private struct SleepScoreHero: View {
+    let score: Int
+    let timeAsleep: String
     var body: some View {
         HStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text("78")
+                    Text("\(score)")
                         .font(.system(size: 64, weight: .black))
                         .foregroundColor(.white)
                         .tracking(-2)
@@ -848,7 +881,7 @@ private struct SleepScoreHero: View {
                     .font(.system(size: 11, weight: .bold))
                     .foregroundColor(.gray)
                     .tracking(1)
-                Text("6h 42m")
+                Text(timeAsleep)
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.white)
             }
@@ -931,10 +964,12 @@ private struct SleepHypnogramCard: View {
 }
 
 private struct SleepMetricsGrid: View {
+    let efficiencyText: String
+    let restorativeText: String
     var body: some View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            metricCard(title: "Efficiency", value: "86%", subtitle: "Time in bed: 7h 48m", statusColor: .yellow)
-            metricCard(title: "Restorative", value: "42%", subtitle: "Target: > 35%", statusColor: .green)
+            metricCard(title: "Efficiency", value: efficiencyText, subtitle: "Time in bed: 7h 48m", statusColor: .yellow)
+            metricCard(title: "Restorative", value: restorativeText, subtitle: "Target: > 35%", statusColor: .green)
             metricCard(title: "Resp. Rate", value: "14.2", subtitle: "rpm (Stable)", statusColor: .green)
             metricCard(title: "Latency", value: "45m", subtitle: "Took too long", statusColor: .red)
         }
