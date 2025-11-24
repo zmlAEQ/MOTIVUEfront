@@ -14,6 +14,7 @@ final class AppData: ObservableObject {
     @Published var weeklyReport: WeeklyReportResponse
     @Published var baseline: BaselineResponse
     @Published var physioAge: PhysioAgeResponse
+    @Published var useRealAPI: Bool = false
 
     init() {
         // Default to mock; later can switch to real API calls
@@ -27,8 +28,11 @@ final class AppData: ObservableObject {
     // MARK: - Refresh helpers (mock/real)
 
     @MainActor
-    func refreshAll(useReal: Bool = false) async {
-        ApiService.shared.useMock = !useReal
+    func refreshAll(useReal: Bool? = nil) async {
+        if let flag = useReal {
+            useRealAPI = flag
+        }
+        ApiService.shared.useMock = !useRealAPI
         async let r = refreshReadiness()
         async let c = refreshConsumption()
         async let w = refreshWeeklyReport()

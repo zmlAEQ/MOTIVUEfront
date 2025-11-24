@@ -54,6 +54,7 @@ struct ContentView: View {
                             }
                         }
                         TabBarView(selectedTab: $selectedTab)
+                            .padding(.bottom, 4)
 
                         // Overlays
                         if showCalendarOverlay {
