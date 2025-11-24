@@ -52,3 +52,9 @@
 - UI 已完成（Home/Training/Journal/Sleep/Report/Me），部分已绑定 mock（Home/Training/Me/Report）。
 - 模型/网络层已对齐主要字段；仍需用真实响应校验字段、补缺并绑定到 UI（尤其 Training/Sleep 真实数据）。
 - `DEV_BACKEND_UI_REFERENCE.md` 需补充页面-接口绑定；Git 已可推送（origin=https://github.com/zmlAEQ/MOTIVUEfront）。
+
+## 即将进行的接入步骤（下一轮）
+- 把 Report 页的 markdown + chart_ids 的 mock 换成真实调用 `weekly-report/run`（use_llm=false），添加 Markdown → UI 的替换示例。
+- Home/Training：在 AppData 的 refresh 流程中调用 readiness/consumption，前端绑定真实数值。
+- Me：调用 physio-age/baseline 填充徽章与基线卡片；Sleep 先复用 readiness 中的睡眠指标。
+- 文档补充：基于真实响应的字段校验以及 baseURL/token 开关说明。
