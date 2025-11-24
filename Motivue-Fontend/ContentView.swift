@@ -48,7 +48,8 @@ struct ContentView: View {
                             case .me:
                                 MeTabView(
                                     physioAge: appData.physioAge,
-                                    baseline: appData.baseline
+                                    baseline: appData.baseline,
+                                    weeklyReport: appData.weeklyReport
                                 )
                                     .padding(.bottom, 88)
                             }
@@ -2907,6 +2908,7 @@ private struct MeTabView: View {
     @State private var showPhysio = false
     var physioAge: PhysioAgeResponse
     var baseline: BaselineResponse
+    var weeklyReport: WeeklyReportResponse
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -2934,7 +2936,7 @@ private struct MeTabView: View {
             }
         }
         .fullScreenCover(isPresented: $showReport) {
-            ReportTabView(report: appData.weeklyReport, onDismiss: { showReport = false })
+            ReportTabView(report: weeklyReport, onDismiss: { showReport = false })
         }
         .fullScreenCover(isPresented: $showPhysio) {
             PhysioAgeDetailView()
