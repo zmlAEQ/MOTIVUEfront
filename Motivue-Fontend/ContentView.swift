@@ -37,7 +37,7 @@ struct ContentView: View {
                                 )
                                     .padding(.bottom, 88)
                             case .training:
-                                TrainingTabView()
+                                TrainingTabView(consumption: appData.consumption)
                                     .padding(.bottom, 88)
                             case .journal:
                                 JournalTabView()
@@ -1494,10 +1494,24 @@ private struct HomeTabView: View {
 // MARK: - Training Tab
 
 private struct TrainingTabView: View {
+    var consumption: TrainingConsumptionResponse
     @State private var showLogSheet = false
     @State private var selectedType: TrainingType = .strength
     @State private var rpeValue: Double = 7
     @State private var durationMinutes: Double = 45
+
+    private var readinessAfterConsumption: Int? {
+        if let display = consumption.displayReadiness {
+            return Int(display.rounded())
+        }
+        return nil
+    }
+    private var consumptionScoreText: String {
+        if let c = consumption.consumptionScore {
+            return String(format: "%.0f AU", c)
+        }
+        return "--"
+    }
 
     var body: some View {
         ZStack {
@@ -1515,6 +1529,11 @@ private struct TrainingTabView: View {
 
                     ACWRGaugeCard(acwrValue: 1.1)
                         .padding(.horizontal, 20)
+
+                    if let ready = readinessAfterConsumption {
+                        ConsumptionSummaryView(readiness: ready, consumptionText: consumptionScoreText)
+                            .padding(.horizontal, 20)
+                    }
 
                     TrainingGridView()
                         .padding(.horizontal, 20)
@@ -3553,4 +3572,35 @@ private extension View {
 
 #Preview {
     ContentView()
+}
+private struct ConsumptionSummaryView: View {
+    let readiness: Int
+    let consumptionText: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Readiness after consumption")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.white)
+                Spacer()
+                Text("\(readiness)")
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color.white.opacity(0.08))
+                    .cornerRadius(12)
+            }
+            Text("Today's training load: \(consumptionText)")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(.gray)
+        }
+        .padding(14)
+        .background(Color(red: 0.11, green: 0.11, blue: 0.12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.white.opacity(0.05), lineWidth: 1)
+        )
+        .cornerRadius(16)
+    }
 }
