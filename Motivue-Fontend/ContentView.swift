@@ -9,6 +9,7 @@ import SwiftUI
 import UIKit
 
 struct ContentView: View {
+    @StateObject private var appData = AppData()
     @State private var selectedTab: Tab = .home
     @State private var showCalendarOverlay = false
 
@@ -30,6 +31,8 @@ struct ContentView: View {
                             switch selectedTab {
                             case .home:
                                 HomeTabView(
+                                    readiness: appData.readiness,
+                                    consumption: appData.consumption,
                                     onShowCalendar: { showCalendarOverlay = true }
                                 )
                                     .padding(.bottom, 88)
@@ -43,7 +46,10 @@ struct ContentView: View {
                                 SleepTabView()
                                     .padding(.bottom, 88)
                             case .me:
-                                MeTabView()
+                                MeTabView(
+                                    physioAge: appData.physioAge,
+                                    baseline: appData.baseline
+                                )
                                     .padding(.bottom, 88)
                             }
                         }
@@ -1389,7 +1395,38 @@ private enum Tab {
 // MARK: - Home Tab (Readiness Dashboard)
 
 private struct HomeTabView: View {
+    var readiness: ReadinessResponse
+    var consumption: TrainingConsumptionResponse
     var onShowCalendar: () -> Void = {}
+
+    private var readinessScore: Int { readiness.finalReadinessScore ?? 0 }
+    private var sleepValue: String {
+        if let hours = readiness.sleepDurationHours {
+            return String(format: "%.1f", hours)
+        }
+        return "75"
+    }
+    private var strainValue: String {
+        if let score = consumption.consumptionScore {
+            return String(format: "%.0f", score)
+        }
+        return "300"
+    }
+    private var hrvValue: String {
+        if let hrv = readiness.hrvRmssdToday {
+            return String(format: "%.0f", hrv)
+        }
+        return "42"
+    }
+    private var acwrValue: String {
+        if let a = readiness.acwr {
+            return String(format: "%.2f", a)
+        }
+        return "1.05"
+    }
+    private var insightText: String {
+        readiness.insights?.first?.summary ?? "你的恢复状况良好，HRV 回升明显。建议今日保持中等强度。"
+    }
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 18) {
@@ -1412,17 +1449,15 @@ private struct HomeTabView: View {
                 }
                     .padding(.horizontal, 24)
 
-                HeroRingView(score: 85)
+                HeroRingView(score: readinessScore)
 
-                MetricsRowView()
+                MetricsRowView(sleepValue: sleepValue, strainValue: strainValue)
 
                 VStack(spacing: 12) {
-                    MetricsGridView()
-                    InsightCardView(
-                        text: "你的恢复状况良好，HRV 回升明显。建议今日保持中等强度。"
-                    )
+                    MetricsGridView(hrvValue: hrvValue, acwrValue: acwrValue)
+                    InsightCardView(text: insightText)
                 }
-                    .padding(.horizontal, 24)
+                .padding(.horizontal, 24)
 
                 DailyJournalCardView()
                     .padding(.horizontal, 20)
@@ -2797,6 +2832,8 @@ private struct PlaceholderTabView: View {
 private struct MeTabView: View {
     @State private var showReport = false
     @State private var showPhysio = false
+    var physioAge: PhysioAgeResponse
+    var baseline: BaselineResponse
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -2811,7 +2848,7 @@ private struct MeTabView: View {
                 MeHeroSection(onShowPhysio: { showPhysio = true })
                     .padding(.horizontal, 20)
 
-                MeBaselineGrid()
+                MeBaselineGrid(baseline: baseline)
                     .padding(.horizontal, 16)
 
                 MeWeeklyReports(onOpenReport: { showReport = true })
@@ -2852,6 +2889,8 @@ private struct MeHeaderActions: View {
 
 private struct MeHeroSection: View {
     var onShowPhysio: () -> Void = {}
+    var physioAge: PhysioAgeResponse? = nil
+    var realAge: Int = 28
     var body: some View {
         HStack(spacing: 16) {
             ZStack {
@@ -2879,7 +2918,7 @@ private struct MeHeroSection: View {
                     .foregroundColor(.gray)
 
                 HStack(spacing: 8) {
-                    Text("Real 28")
+                    Text("Real \(realAge)")
                         .font(.system(size: 10, weight: .bold))
                         .foregroundColor(.gray)
                         .padding(.horizontal, 8)
@@ -2890,7 +2929,7 @@ private struct MeHeroSection: View {
                         Text("Physio Age")
                             .font(.system(size: 10, weight: .bold))
                             .foregroundColor(.green)
-                        Text("24")
+                        Text("\(physioAge?.physiologicalAge ?? 24)")
                             .font(.system(size: 16, weight: .black))
                             .foregroundColor(.green)
                         Image(systemName: "chevron.down")
@@ -2914,6 +2953,7 @@ private struct MeHeroSection: View {
 }
 
 private struct MeBaselineGrid: View {
+    var baseline: BaselineResponse
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -2927,10 +2967,10 @@ private struct MeBaselineGrid: View {
                     .foregroundColor(.gray)
             }
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-                baselineCard(title: "Sleep Duration", value: "7h 45m", tag: "30d Avg", icon: "moon.fill", iconColor: .blue)
-                baselineCard(title: "HRV", value: "45-58", tag: "Range", icon: "waveform.path.ecg", iconColor: .purple)
-                baselineCard(title: "Resting HR", value: "52 bpm", tag: "30d Avg", icon: "heart.fill", iconColor: .red)
-                baselineCard(title: "Sleep Efficiency", value: "92%", tag: "Target", icon: "checkmark.seal.fill", iconColor: .green)
+                baselineCard(title: "Sleep Duration", value: baseline.sleepBaselineHours.map { String(format: "%.1f h", $0) } ?? "—", tag: "30d Avg", icon: "moon.fill", iconColor: .blue)
+                baselineCard(title: "HRV μ", value: baseline.hrvBaselineMu.map { String(format: "%.0f", $0) } ?? "—", tag: "Range", icon: "waveform.path.ecg", iconColor: .purple)
+                baselineCard(title: "Resting HR", value: "—", tag: "30d Avg", icon: "heart.fill", iconColor: .red)
+                baselineCard(title: "Sleep Efficiency", value: baseline.sleepBaselineEff.map { String(format: "%.0f%%", $0 * 100) } ?? "—", tag: "Target", icon: "checkmark.seal.fill", iconColor: .green)
             }
         }
     }
@@ -3258,21 +3298,25 @@ private struct MetricCircle: View {
 }
 
 private struct MetricsRowView: View {
+    let sleepValue: String
+    let strainValue: String
     var body: some View {
         HStack(spacing: 36) {
-            MetricCircle(title: "Sleep", value: "75", subtitle: nil, ringColor: Color.blue, ringTrim: 0.78)
-            MetricCircle(title: "Strain", value: "300", subtitle: "AU", ringColor: Color.orange, ringTrim: 0.75)
+            MetricCircle(title: "Sleep", value: sleepValue, subtitle: nil, ringColor: Color.blue, ringTrim: 0.78)
+            MetricCircle(title: "Strain", value: strainValue, subtitle: "AU", ringColor: Color.orange, ringTrim: 0.75)
         }
         .padding(.horizontal, 24)
     }
 }
 
 private struct MetricsGridView: View {
+    let hrvValue: String
+    let acwrValue: String
     var body: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 12) {
-            metricBox(title: "HRV", value: "42", unit: "ms", accent: .white.opacity(0.1), border: .white.opacity(0.08), titleColor: .gray, valueColor: .white, unitColor: .gray)
+            metricBox(title: "HRV", value: hrvValue, unit: "ms", accent: .white.opacity(0.1), border: .white.opacity(0.08), titleColor: .gray, valueColor: .white, unitColor: .gray)
             metricBox(title: "RHR", value: "58", unit: "bpm", accent: .white.opacity(0.1), border: .white.opacity(0.08), titleColor: .gray, valueColor: .white, unitColor: .gray)
-            metricBox(title: "ACWR", value: "1.05", unit: "Optimal", accent: Color.green.opacity(0.2), border: Color.green.opacity(0.3), titleColor: Color.green, valueColor: Color.green, unitColor: Color.green.opacity(0.7))
+            metricBox(title: "ACWR", value: acwrValue, unit: "Optimal", accent: Color.green.opacity(0.2), border: Color.green.opacity(0.3), titleColor: Color.green, valueColor: Color.green, unitColor: Color.green.opacity(0.7))
         }
     }
 
